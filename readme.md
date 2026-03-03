@@ -1,86 +1,210 @@
-# Gmail-Bot
+# AutoReply.ai — Gmail Auto-Reply Bot
 
-The Email Auto-Reply Bot is a Node.js application that automatically sends a predefined reply to emails. It integrates with the Gmail API to fetch unread messages, identify emails that have not been replied to, and send auto-replies to those emails.
+A multi-user web application that automatically sends personalised replies to unread Gmail messages. Users sign in with Google, flip a toggle, and the bot handles first-touch replies on their behalf.
+
+---
+
+## Features
+
+- **Google OAuth2 sign-in** — no passwords stored, secure token-based auth
+- **Per-user bot control** — each user independently toggles their bot on/off
+- **Instant first run** — toggling ON triggers an inbox scan within ~1 second
+- **Custom reply message** — configure your own auto-reply text from the dashboard
+- **Adjustable check interval** — set how often the bot scans your inbox (10–300 s min, 10–600 s max)
+- **Live dashboard** — real-time countdown, reply count, success rate, activity feed
+- **GmailBot label** — auto-replied emails are labelled `GmailBot` in Gmail
+- **Duplicate-reply protection** — per-sender in-memory tracking + thread-reply check
+- **HTTP-only JWT sessions** — XSS-safe, 7-day cookie lifetime
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Node.js + Express (ESM) |
+| Database | MongoDB + Mongoose |
+| Auth | Google OAuth2 + JWT (HTTP-only cookie) |
+| Gmail | Google APIs Node.js client (`googleapis`) |
+| Frontend | React 18 + Vite + Tailwind CSS |
+| Routing | React Router v6 |
+
+---
+
+## Project Structure
+
+```
+GmailBot/
+├── index.js                  # Entry point: MongoDB connect, routes, bot engine
+├── configs/
+│   └── configs.js            # Exports env vars (CLIENT_ID, CLIENT_SECRET, …)
+├── models/
+│   └── User.js               # Mongoose schema (email, refreshToken, settings, …)
+├── middleware/
+│   └── auth.js               # JWT cookie verification middleware
+├── routes/
+│   ├── auth.js               # /api/auth/* (google, callback, me, logout)
+│   └── bot.js                # /api/bot/* (toggle, status, activity, settings)
+├── controllers/
+│   ├── gmailApi.js           # createGmailClient(refreshToken), createLabelIfNeeded()
+│   └── email.js              # getEmail(), sendReplyEmail()
+├── services/
+│   └── botEngine.js          # Multi-user polling loop, triggerImmediateCycle()
+└── client/                   # Vite + React frontend
+    ├── index.html
+    ├── vite.config.js        # Proxies /api → http://localhost:8000
+    ├── tailwind.config.js
+    └── src/
+        ├── main.jsx
+        ├── App.jsx           # React Router: / → Landing, /dashboard → Dashboard
+        └── pages/
+            ├── Landing.jsx   # Marketing page with auth-aware navbar
+            └── Dashboard.jsx # Bot control, stats, activity feed, settings
+```
+
+---
 
 ## Prerequisites
 
-Before using the Email Auto-Reply Bot, you need to set up a project in the Google Cloud Console and obtain the necessary credentials. Here are the steps:
+1. **Node.js** v18+
+2. **MongoDB** running locally or a MongoDB Atlas URI
+3. A **Google Cloud project** with the Gmail API enabled and an OAuth 2.0 client configured
 
-1. Create a project in the Google Cloud Console (https://console.cloud.google.com).
-2. Enable the Gmail API for the project.
-3. Create OAuth 2.0 credentials (Client ID and Client Secret) for the project.
-4. Configure the authorized redirect URI in the credentials settings.
-5. Generate a refresh token by using the OAuth Playground (https://developers.google.com/oauthplayground). Authorize the https://mail.google.com scope for the Gmail API using the client ID and client secret. Exchange the authorization code for a refresh token.
+### Setting up Google OAuth2
 
-## Configuration
+1. Go to [Google Cloud Console](https://console.cloud.google.com) and create (or select) a project.
+2. Enable the **Gmail API** for the project.
+3. Under **APIs & Services → Credentials**, create an **OAuth 2.0 Client ID** (Web application).
+4. Add the following **Authorised redirect URI**:
+   ```
+   http://localhost:8000/api/auth/google/callback
+   ```
+5. Copy the **Client ID** and **Client Secret** — you'll need them in `.env`.
 
-Before running the application, make sure to set up the following configuration variables:
+---
 
-- `CLIENT_ID`: The Client ID obtained from the Google Cloud Console.
-- `CLIENT_SECRET`: The Client Secret obtained from the Google Cloud Console.
-- `REDIRECT_URI`: The authorized redirect URI configured in the Google Cloud Console.
-- `REFRESH_TOKEN`: The refresh token obtained from the OAuth Playground.
+## Environment Variables
 
-Create a `.env` file in the project directory and populate it with the above configuration variables:
+Create a `.env` file in the project root (see `.env.example`):
 
+```env
+CLIENT_ID=your_google_client_id
+CLIENT_SECRET=your_google_client_secret
+REDIRECT_URI=http://localhost:8000/api/auth/google/callback
+MONGODB_URI=mongodb://localhost:27017/gmailbot
+JWT_SECRET=a_long_random_secret_string
 ```
-CLIENT_ID=<your-client-id>
-CLIENT_SECRET=<your-client-secret>
-REDIRECT_URI=<your-redirect-uri>
-REFRESH_TOKEN=<your-refresh-token>
-```
-You can also take reference from the `.env.example` file.
+
+> `REFRESH_TOKEN` is **not** needed — it is stored per-user in MongoDB after OAuth sign-in.
+
+---
+
 ## Installation
 
-To install the required dependencies, run the following command:
-```
+### Backend
+
+```bash
 npm install
- ```
+```
 
-## Usage
+### Frontend
 
-To start the Email Auto-Reply Bot, run the following command:
+```bash
+cd client && npm install
 ```
-npm start
-```
-for development server:
-```
+
+---
+
+## Running the App
+
+Open **two terminals**:
+
+```bash
+# Terminal 1 — backend (port 8000)
 npm run dev
+
+# Terminal 2 — frontend (port 5173)
+npm run dev:client
 ```
 
+Then open [http://localhost:5173](http://localhost:5173) in your browser.
 
-The bot will connect to the Gmail API using the provided credentials and start monitoring for unread emails. It will send an auto-reply to each unread email that meets the criteria.
+---
 
-## Auto-Reply Message
+## API Reference
 
-The auto-reply message is a predefined response that will be sent to the recipients of the incoming emails. It can be customized according to your needs. By default, the message says:
-```
-From: [sender-email]
-to: [recipient-email]
-Subject: [email-subject]
+### Auth — `/api/auth`
 
-I am acknowledging your message and I will respond as soon as possible.
-```
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/google` | Redirect to Google consent screen |
+| `GET` | `/google/callback` | OAuth2 callback — issues JWT cookie, redirects to `/dashboard` |
+| `GET` | `/me` | Returns current user (`{ email, name, picture }`) or `401` |
+| `POST` | `/logout` | Clears the JWT cookie |
 
-## Console logs
+### Bot — `/api/bot` *(requires auth)*
 
-The application provides detailed console logs to keep you informed about its activities. Here are the key log messages:
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/toggle` | Toggle bot on/off; triggers immediate cycle when enabling |
+| `GET` | `/status` | `{ botEnabled, lastRun, lastError, replyCount, errorCount, successRate, nextRunAt }` |
+| `GET` | `/activity` | Last 20 auto-reply events (most recent first) |
+| `GET` | `/settings` | `{ replyMessage, minInterval, maxInterval }` |
+| `PUT` | `/settings` | Update reply message and/or check interval |
 
-- `Starting the email auto-reply bot...`: Indicates that the bot has started and is ready to process incoming emails.
-- `Gmail Bot Started...`: Indicates that the Gmail API connection is established.
-- `Total unread messages`: [count]": Displays the total number of unread messages found.
-- `Processing email from`: [sender-email]": Indicates that the bot is processing an email from a specific sender.
-- `Sent reply to email`: [sender-email]": Indicates that an auto-reply has been sent to the specified sender's email.
-- `Already replied to`: [sender-email]": Indicates that the sender has already received an auto-reply and will be skipped.
+---
 
-## Interval
+## Bot Logic
 
-The bot repeats the email checking and auto-reply process in random intervals of 45 to 120 seconds. The randomization adds a level of natural variation to the response times, making it less predictable and more realistic.
+1. **Polling loop** — a single `tick()` runs `runCycle()`, then schedules the next tick using a random delay within each user's configured `[minInterval, maxInterval]` range.
+2. **Immediate trigger** — when a user enables the bot, `triggerImmediateCycle()` cancels the pending wait and fires a new cycle within ~1 second.
+3. **Per-user processing** — each enabled user's Gmail inbox is scanned for unread messages.
+4. **Reply logic** — for each unread thread, if no reply has been sent yet (checked via the Gmail thread API and an in-memory per-sender Set), the bot sends the user's custom message.
+5. **Labelling** — the replied email is labelled `GmailBot` in Gmail (created automatically if absent).
+6. **Mid-cycle stop** — toggling the bot OFF is recorded in an in-memory `disabledMidCycle` Set; the engine checks this before processing each email, so it stops without waiting for the current cycle to finish.
 
-## Labeling and Moving Emails
+---
 
-To keep track of the emails that have been auto-replied to, the bot adds a label to the replied emails. By default, the label name is "AutoReplied". Additionally, the bot moves the replied email to a label named "GmailBot". If these labels do not exist, the bot creates them automatically.
+## Dashboard
 
-## Conclusion
+The React dashboard provides:
 
-The Gmail-Bot provides a convenient way to automate the process of replying to incoming emails. It helps manage communication when you are unavailable or on vacation. By setting up the necessary credentials and configuring the application, you can easily run the bot and let it handle the auto-replies for you.
+- **Bot toggle** with animated switch and instant status feedback
+- **System status card** — active/paused state, last run time, error display, success rate
+- **Stat cards** — success rate, replies sent this session, last run, next check countdown
+- **Activity feed** — chronological list of auto-replied emails (subject, sender, time)
+- **Settings panel**:
+  - Custom auto-reply message (textarea, character count)
+  - Min/Max check interval with live frontend validation (red borders, inline errors, Save disabled until valid)
+
+---
+
+## User Settings
+
+| Setting | Default | Min | Max |
+|---|---|---|---|
+| Min interval | 10 s | 10 s | 300 s |
+| Max interval | 10 s | 10 s | 600 s |
+| Reply message | *"Thank you for your email…"* | — | — |
+
+> **Existing accounts**: if you signed up before the 10 s default was set, go to **Settings → Check Interval** and update your values to take effect.
+
+---
+
+## Security
+
+- **No password storage** — Google OAuth2 only; a `refresh_token` is stored encrypted in MongoDB.
+- **Minimal Gmail scopes** — `https://mail.google.com`, `userinfo.profile`, `userinfo.email`.
+- **HTTP-only JWT cookie** — not accessible from JavaScript, protecting against XSS.
+- **Revoke anytime** — remove access from [Google Account → Third-party apps](https://myaccount.google.com/permissions).
+
+---
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `npm start` | Start backend (production) |
+| `npm run dev` | Start backend with nodemon (development) |
+| `npm run dev:client` | Start Vite dev server for the frontend |
+| `cd client && npm run build` | Build frontend for production |
