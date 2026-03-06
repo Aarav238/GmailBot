@@ -80,7 +80,7 @@ export default function Landing() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#137fec] text-white">
               <span className="material-symbols-outlined text-2xl">mail</span>
             </div>
-            <h1 className="text-xl font-bold tracking-tight">MailBot</h1>
+            <h1 className="text-xl font-bold tracking-tight">AutoReply.ai</h1>
           </a>
 
           {/* Nav links */}
@@ -479,7 +479,7 @@ export default function Landing() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ backgroundColor: "#137fec" }}>
                 <span className="material-symbols-outlined text-xl">mail</span>
               </div>
-              <span className="text-lg font-bold tracking-tight">MailBot</span>
+              <span className="text-lg font-bold tracking-tight">AutoReply.ai</span>
             </div>
             <a
               href="mailto:aarav8090shukla@gmail.com"
@@ -489,7 +489,7 @@ export default function Landing() {
             </a>
           </div>
           <div className="mt-12 text-center text-sm text-slate-400">
-            <p>© {new Date().getFullYear()} MailBot. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} AutoReply.ai. All rights reserved.</p>
           </div>
         </div>
       </footer>

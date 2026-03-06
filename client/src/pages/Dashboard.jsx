@@ -140,7 +140,7 @@ export default function Dashboard() {
           <div className="p-1.5 rounded-lg text-white" style={{ backgroundColor: "#137fec" }}>
             <span className="material-symbols-outlined text-xl">mail</span>
           </div>
-          <span className="text-lg font-bold tracking-tight">MailBot</span>
+          <span className="text-lg font-bold tracking-tight">AutoReply.ai</span>
         </button>
         {user && (
           user.picture
@@ -161,7 +161,7 @@ export default function Dashboard() {
               <div className="p-2 rounded-lg text-white" style={{ backgroundColor: "#137fec" }}>
                 <span className="material-symbols-outlined text-2xl">mail</span>
               </div>
-              <span className="text-xl font-bold tracking-tight">MailBot</span>
+              <span className="text-xl font-bold tracking-tight">AutoReply.ai</span>
             </button>
 
             {/* User profile */}
