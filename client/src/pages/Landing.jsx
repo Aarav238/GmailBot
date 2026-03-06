@@ -80,7 +80,7 @@ export default function Landing() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#137fec] text-white">
               <span className="material-symbols-outlined text-2xl">mail</span>
             </div>
-            <h1 className="text-xl font-bold tracking-tight">AutoReply.ai</h1>
+            <h1 className="text-xl font-bold tracking-tight">MailBot</h1>
           </a>
 
           {/* Nav links */}
@@ -136,7 +136,7 @@ export default function Landing() {
       <main className="flex-grow">
 
         {/* ── Hero ── */}
-        <section className="mx-auto max-w-7xl px-6 py-16 lg:px-10 lg:py-24">
+        <section className="mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:py-24">
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
 
             {/* Left copy */}
@@ -145,7 +145,7 @@ export default function Landing() {
                 <span className="inline-flex items-center rounded-full bg-[#137fec]/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#137fec]">
                   Google OAuth · Zero password storage
                 </span>
-                <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tight text-slate-900 lg:text-6xl">
+                <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
                   Automate your Gmail replies{" "}
                   <span className="text-[#137fec]">effortlessly.</span>
                 </h1>
@@ -185,7 +185,7 @@ export default function Landing() {
             </div>
 
             {/* Right — mock dashboard preview */}
-            <div className="relative lg:ml-10">
+            <div className="relative lg:ml-10 hidden sm:block">
               <div className="absolute -inset-4 rounded-3xl bg-[#137fec]/5 blur-2xl" />
               <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
                 {/* Fake browser chrome */}
@@ -479,7 +479,7 @@ export default function Landing() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ backgroundColor: "#137fec" }}>
                 <span className="material-symbols-outlined text-xl">mail</span>
               </div>
-              <span className="text-lg font-bold tracking-tight">AutoReply.ai</span>
+              <span className="text-lg font-bold tracking-tight">MailBot</span>
             </div>
             <a
               href="mailto:aarav8090shukla@gmail.com"
@@ -489,7 +489,7 @@ export default function Landing() {
             </a>
           </div>
           <div className="mt-12 text-center text-sm text-slate-400">
-            <p>© {new Date().getFullYear()} AutoReply.ai. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} MailBot. All rights reserved.</p>
           </div>
         </div>
       </footer>
